@@ -45,7 +45,7 @@ Start-PodeServer @PodeServerParams {
                 $Verb = $WebEvent.Parameters['Verb']
                 $Noun = $WebEvent.Parameters['Noun']
 
-                $Payload = $WebEvent.Data | ConvertTo-Json -Depth 5 | ConvertFrom-Json -AsHashtable
+                $Payload = $WebEvent.Data | ConvertTo-Json -Depth 99 -WarningAction SilentlyContinue | ConvertFrom-Json -AsHashtable
 
                 $CommandName = $ActiveDirectoryCommands.Name | Where-Object { $_.ToLower() -eq ($Verb.ToLower(), $Noun.ToLower() -join '-') }
 
@@ -74,7 +74,7 @@ Start-PodeServer @PodeServerParams {
                     $Response.Error = 'Endpoint at URL {0}/{1} / Command with Name {0}-{1} (Verb-Noun) was not found' -f $Verb, $Noun
                 }
 
-                $Response | ConvertTo-Json -Depth 5 | Write-PodeTextResponse -ContentType 'application/json'
+                $Response | ConvertTo-Json -Depth 99 -WarningAction SilentlyContinue | Write-PodeTextResponse -ContentType 'application/json'
 
             }
 

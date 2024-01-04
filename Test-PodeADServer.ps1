@@ -4,11 +4,6 @@ $InvokeRestMethodParams = @{
     ContentType = 'application/json'
     Body        = @{
         Filter     = '*'
-        Properties = @(
-            'ObjectGUID'
-            'SID'
-            'Name'
-        )
     } | ConvertTo-Json
 }
 
