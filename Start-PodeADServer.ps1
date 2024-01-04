@@ -45,26 +45,33 @@ Start-PodeServer @PodeServerParams {
                 $Verb = $WebEvent.Parameters['Verb']
                 $Noun = $WebEvent.Parameters['Noun']
 
-                $Payload = $WebEvent.Data | ConvertTo-Json -Depth 99 | ConvertFrom-Json -AsHashtable
+                $Payload = $WebEvent.Data | ConvertTo-Json -Depth 5 | ConvertFrom-Json -AsHashtable
 
-                $CommandName, ($Payload | ConvertTo-Json) | Write-Host
-
-                $CommandName = $Verb, $Noun -join '-'
+                $CommandName = $ActiveDirectoryCommands.Name | Where-Object { $_.ToLower() -eq ($Verb.ToLower(), $Noun.ToLower() -join '-') }
 
                 # Generate Response
+                $Response = [ordered]@{
+                    context = 'PodeADServer'
+                    type    = 'Response'
+                }
+
                 if ($CommandName -in $ActiveDirectoryCommands.Name) {
-                    $Response = @{
-                        '@context' = 'PodeADServer'
-                        '@type'    = 'Response'
-                        Response   = & $CommandName @Payload
+
+                    try {
+                        $Result = & $CommandName @Payload | Select-Object *
                     }
+                    catch {
+                        $Response.Error = [string]$_
+                    }
+
+                    if ($Result) {
+                        $Response.Count = $Result.Count
+                        $Response.Data = $Result
+                    }
+
                 }
                 else {
-                    $Response = @{
-                        '@context' = 'PodeADServer'
-                        '@type'    = 'Response'
-                        Text       = 'Command not found'
-                    }
+                    $Response.Error = 'Endpoint at URL {0}/{1} / Command with Name {0}-{1} (Verb-Noun) was not found' -f $Verb, $Noun
                 }
 
                 $Response | ConvertTo-Json -Depth 5 | Write-PodeTextResponse -ContentType 'application/json'
